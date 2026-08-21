@@ -1,0 +1,13 @@
+{
+  "name": "mp-dashboard",
+  "version": "2.0.0",
+  "description": "MP Dashboard - Enterprise CRM for solar power sales",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

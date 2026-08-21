@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MP DASHBOARD - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="crm-api.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#f8f9ff',
+                        surface: '#f8f9ff',
+                        'surface-container-lowest': '#ffffff',
+                        'surface-container-low': '#eff4ff',
+                        'surface-container': '#e5eeff',
+                        'surface-container-high': '#dce9ff',
+                        'surface-bright': '#f8f9ff',
+                        'outline-variant': '#c6c6cd',
+                        'outline': '#76777d',
+                        primary: '#000000',
+                        'on-primary': '#ffffff',
+                        'primary-container': '#131b2e',
+                        'on-primary-container': '#7c839b',
+                        secondary: '#006d30',
+                        'secondary-container': '#92f5a4',
+                        'on-secondary-container': '#007233',
+                        'on-surface': '#0b1c30',
+                        'on-surface-variant': '#45464d',
+                        error: '#ba1a1a'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        };
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .metric-card { transition: transform .2s ease, box-shadow .2s ease; }
+        .metric-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(11, 28, 48, .1); }
+        .stat-icon { transition: background-color .2s ease; }
+        dialog { border: 0; border-radius: 16px; padding: 0; box-shadow: 0 25px 80px rgba(16,32,51,.25); width: min(560px, calc(100% - 32px)); }
+        dialog::backdrop { background: rgba(16,32,51,.45); }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface min-h-screen flex">
+    <nav class="bg-surface-container-lowest border-r border-outline-variant w-[260px] h-screen fixed left-0 top-0 flex flex-col py-4 z-50">
+        <div class="px-6 mb-8 flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary text-3xl">solar_power</span>
+            <div>
+                <h1 class="text-title-lg font-bold text-on-surface">MP DASHBOARD</h1>
+                <p class="text-label-md text-on-surface-variant">Enterprise Edition</p>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto px-2 space-y-1">
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary-container text-on-secondary-container font-semibold" href="index.html"><span class="material-symbols-outlined">dashboard</span> Dashboard</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="lead-management.html"><span class="material-symbols-outlined">group</span> Leads</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="task-list.html"><span class="material-symbols-outlined">checklist</span> Task List</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="site-survey.html"><span class="material-symbols-outlined">architecture</span> Site Survey</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="inventory.html"><span class="material-symbols-outlined">inventory_2</span> Inventory</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="staff.html"><span class="material-symbols-outlined">badge</span> Staff</a>
+            <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high" href="https://inpacepowersales.bolt.host/" target="_blank" rel="noopener noreferrer"><span class="material-symbols-outlined">description</span> Proposals</a>
+        </div>
+        <div class="border-t border-outline-variant px-4 pt-4">
+            <button id="logoutBtn" type="button" class="w-full rounded-lg border border-outline-variant px-3 py-2 text-sm text-on-surface hover:bg-surface-container-low">Logout</button>
+        </div>
+    </nav>
+
+    <div class="flex-1 ml-[260px] flex flex-col min-h-screen">
+        <header class="bg-surface-bright border-b border-outline-variant flex justify-between items-center h-16 w-full px-8 sticky top-0 z-40">
+            <div class="flex items-center gap-4">
+                <h2 class="text-headline-md text-on-surface">Dashboard</h2>
+                <span id="userNameBadge" class="text-sm text-on-surface-variant hidden sm:inline"></span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="addLeadBtn" type="button" class="bg-primary text-on-primary px-4 py-2 rounded-lg text-label-md font-semibold">Add Lead</button>
+            </div>
+        </header>
+
+        <main class="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
+            <div id="errorBox" class="hidden mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+            <div id="metricGrid" class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 mb-8"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                        <h3 class="text-title-md font-bold flex items-center gap-2"><span class="material-symbols-outlined text-primary">event</span>Today's Follow-ups</h3>
+                        <a href="task-list.html" class="text-sm text-secondary font-semibold hover:underline">View all</a>
+                    </div>
+                    <div id="followUpList" class="divide-y divide-outline-variant max-h-[360px] overflow-y-auto"></div>
+                </section>
+
+                <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                        <h3 class="text-title-md font-bold flex items-center gap-2"><span class="material-symbols-outlined text-primary">architecture</span>Scheduled Surveys</h3>
+                        <a href="site-survey.html" class="text-sm text-secondary font-semibold hover:underline">View all</a>
+                    </div>
+                    <div id="surveyList" class="divide-y divide-outline-variant max-h-[360px] overflow-y-auto"></div>
+                </section>
+
+                <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                        <h3 class="text-title-md font-bold flex items-center gap-2"><span class="material-symbols-outlined text-primary">insights</span>Hot Deals</h3>
+                        <a href="lead-management.html" class="text-sm text-secondary font-semibold hover:underline">View all</a>
+                    </div>
+                    <div id="hotDealsList" class="divide-y divide-outline-variant max-h-[360px] overflow-y-auto"></div>
+                </section>
+
+                <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                        <h3 class="text-title-md font-bold flex items-center gap-2"><span class="material-symbols-outlined text-primary">group</span>New Leads</h3>
+                        <a href="lead-management.html" class="text-sm text-secondary font-semibold hover:underline">View all</a>
+                    </div>
+                    <div id="newLeadsList" class="divide-y divide-outline-variant max-h-[360px] overflow-y-auto"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="addLeadDialog">
+        <form id="addLeadForm" method="dialog" class="bg-white">
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <h3 class="text-lg font-bold">Add New Lead</h3>
+                <button type="button" id="closeAddLead" class="text-2xl text-slate-400">&times;</button>
+            </div>
+            <div class="grid gap-4 p-6 sm:grid-cols-2">
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Customer Name *</span><input name="customerName" type="text" required class="w-full rounded-lg border border-slate-300 px-3 py-2" /></label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Mobile Number *</span><input name="mobileNumber" type="tel" required class="w-full rounded-lg border border-slate-300 px-3 py-2" /></label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Email</span><input name="email" type="email" class="w-full rounded-lg border border-slate-300 px-3 py-2" /></label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Lead Date *</span><input name="leadDate" type="date" required class="w-full rounded-lg border border-slate-300 px-3 py-2" /></label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Lead Source *</span>
+                    <select name="leadSource" required class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="">Select source</option>
+                        <option>Website</option><option>Google Ads</option><option>Referral</option><option>Outbound</option><option>Inbound</option><option>Telecalling</option><option>Walk-in</option><option>Social Media</option>
+                    </select>
+                </label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Assigned To *</span>
+                    <select name="assignedTo" required class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="">Select employee</option>
+                    </select>
+                </label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Location</span><input name="location" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2" /></label>
+                <label class="block text-sm"><span class="mb-1 block font-medium text-slate-700">Priority</span>
+                    <select name="leadPriority" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                        <option value="Warm">Warm</option><option value="Hot">Hot</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+                    </select>
+                </label>
+            </div>
+            <div class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+                <button type="button" id="cancelAddLead" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Cancel</button>
+                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Create Lead</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        function showError(error) {
+            $('errorBox').textContent = error.message || error;
+            $('errorBox').classList.remove('hidden');
+        }
+
+        const metricDefs = [
+            ['totalLeads', 'Total Leads', 'group'],
+            ['newLeads', 'New Leads', 'fiber_new'],
+            ['convertedLeads', 'Converted', 'check_circle'],
+            ['conversionRate', 'Conversion %', 'trending_up'],
+            ['myLeads', 'My Leads', 'person'],
+            ['todaysFollowUps', "Today's Follow-ups", 'event'],
+            ['overdueFollowUps', 'Overdue', 'warning'],
+            ['todaysSurveys', "Today's Surveys", 'architecture'],
+            ['opportunities', 'Opportunities', 'insights'],
+            ['pipelineValue', 'Pipeline Value', 'payments'],
+            ['proposals', 'Proposals', 'description'],
+            ['bookings', 'Bookings', 'bookmark'],
+            ['revenue', 'Revenue', 'currency_exchange'],
+            ['outstandingAmount', 'Outstanding', 'receipt_long'],
+        ];
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+        }
+
+        function renderMetrics(metrics) {
+            $('metricGrid').innerHTML = metricDefs.map(([key, label, icon]) => {
+                const value = metrics[key];
+                const display = (key === 'pipelineValue' || key === 'revenue' || key === 'outstandingAmount')
+                    ? formatCurrency(value)
+                    : (key === 'conversionRate' ? `${Number(value || 0).toFixed(1)}%` : Number(value || 0).toLocaleString());
+                return `<div class="metric-card bg-surface-container-lowest border border-outline-variant rounded-xl p-5"><div class="flex items-center justify-between"><span class="material-symbols-outlined text-primary text-[28px]">${icon}</span></div><strong class="mt-3 block text-headline-md">${display}</strong><span class="mt-1 block text-label-md text-on-surface-variant">${label}</span></div>`;
+            }).join('');
+        }
+
+        function renderGroup(listId, items, emptyMessage, renderItem) {
+            const container = $(listId);
+            if (!items || !items.length) {
+                container.innerHTML = `<div class="p-6 text-center text-sm text-on-surface-variant">${emptyMessage}</div>`;
+                return;
+            }
+            container.innerHTML = items.map(renderItem).join('');
+        }
+
+        async function loadDashboard() {
+            try {
+                $('errorBox').classList.add('hidden');
+                const [{ metrics }, { groups }] = await Promise.all([
+                    crmApi.request('/api/dashboard'),
+                    crmApi.request('/api/dashboard/groups')
+                ]);
+                renderMetrics(metrics);
+                renderGroup('followUpList', groups.todaysFollowUps, 'No follow-ups scheduled for today.', (item) => `<div class="px-6 py-3 flex items-center justify-between"><div><a href="lead-details.html?lead=${encodeURIComponent(item.lead_id)}" class="font-semibold text-on-surface hover:underline">${escapeHtml(item.customer_name)}</a><p class="text-sm text-on-surface-variant">${escapeHtml(item.mobile_number)}</p></div><span class="text-sm text-on-surface-variant">${escapeHtml(item.due_time || '')}</span></div>`);
+                renderGroup('surveyList', groups.scheduledSurveys, 'No surveys currently scheduled.', (item) => `<div class="px-6 py-3 flex items-center justify-between"><div><a href="lead-details.html?lead=${encodeURIComponent(item.lead_id)}" class="font-semibold text-on-surface hover:underline">${escapeHtml(item.customer_name)}</a><p class="text-sm text-on-surface-variant">${escapeHtml(item.survey_type || '')} · ${escapeHtml(item.status)}</p></div><span class="text-sm text-on-surface-variant">${escapeHtml(String(item.survey_date || '').slice(0, 10))}</span></div>`);
+                renderGroup('hotDealsList', groups.hotDeals, 'No hot deals at this time.', (item) => `<div class="px-6 py-3 flex items-center justify-between"><div><a href="lead-details.html?lead=${encodeURIComponent(item.lead_id)}" class="font-semibold text-on-surface hover:underline">${escapeHtml(item.customer_name)}</a><p class="text-sm text-on-surface-variant">${item.estimated_value ? formatCurrency(item.estimated_value) : ''} · ${item.probability || 0}% probability</p></div></div>`);
+                renderGroup('newLeadsList', groups.newLeads, 'No new leads.', (item) => `<div class="px-6 py-3 flex items-center justify-between"><div><a href="lead-details.html?lead=${encodeURIComponent(item.lead_id)}" class="font-semibold text-on-surface hover:underline">${escapeHtml(item.customer_name)}</a><p class="text-sm text-on-surface-variant">${escapeHtml(item.lead_source || '')} · ${escapeHtml(item.stage)}</p></div></div>`);
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        async function loadAssignableStaff() {
+            try {
+                const { staff } = await crmApi.getAssignableStaff();
+                const select = $('addLeadForm').elements.assignedTo;
+                select.innerHTML = '<option value="">Select employee</option>' + staff.map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.role)})</option>`).join('');
+            } catch (error) { /* staff list is optional for the modal */ }
+        }
+
+        function openAddLeadDialog() {
+            loadAssignableStaff();
+            const today = new Date().toISOString().slice(0, 10);
+            $('addLeadForm').elements.leadDate.value = today;
+            $('addLeadDialog').showModal();
+        }
+
+        $('addLeadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const data = Object.fromEntries(new FormData(event.currentTarget));
+            try {
+                await crmApi.request('/api/leads', { method: 'POST', body: JSON.stringify(data) });
+                $('addLeadDialog').close();
+                await loadDashboard();
+            } catch (error) {
+                showError(error);
+            }
+        });
+
+        $('addLeadBtn').addEventListener('click', openAddLeadDialog);
+        ['closeAddLead', 'cancelAddLead'].forEach((id) => $(id).addEventListener('click', () => $('addLeadDialog').close()));
+        $('logoutBtn').addEventListener('click', async () => {
+            try { await crmApi.request('/api/auth/logout', { method: 'POST' }); } finally {
+                localStorage.removeItem('solarflow_crm_api_token');
+                localStorage.removeItem('solarflow_crm_current_user');
+                location.href = 'login.html';
+            }
+        });
+
+        const params = new URLSearchParams(location.search);
+        if (params.get('action') === 'add-lead') {
+            history.replaceState(null, '', 'index.html');
+            openAddLeadDialog();
+        }
+
+        crmApi.getCurrentUser().then(({ user }) => {
+            $('userNameBadge').textContent = user.name;
+            loadDashboard();
+        }).catch(() => { location.href = 'login.html'; });
+    </script>
+</body>
+
+</html>
